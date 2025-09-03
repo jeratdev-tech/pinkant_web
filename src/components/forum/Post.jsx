@@ -120,21 +120,30 @@ export default function Post({ post, onReply, onPostUpdate }) {
       <div className="flex items-center justify-between pt-4 border-t border-gray-100">
         <div className="flex items-center gap-6">
           <button
-            onClick={handleLike}
-            disabled={loading}
+            onClick={user ? handleLike : () => {}} // Only allow likes if authenticated
+            disabled={loading || !user}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-              liked
+              !user
+                ? "text-gray-300 cursor-not-allowed"
+                : liked
                 ? "text-pink-600 bg-pink-50"
                 : "text-gray-500 hover:text-pink-600 hover:bg-pink-50"
             }`}
+            title={!user ? "Sign up to like posts" : ""}
           >
             <Heart className={`h-5 w-5 ${liked ? "fill-current" : ""}`} />
             <span className="font-medium">{likeCount}</span>
           </button>
 
           <button
-            onClick={() => onReply(post)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-500 hover:text-pink-600 hover:bg-pink-50 transition-colors"
+            onClick={user ? () => onReply(post) : () => {}} // Only allow replies if authenticated
+            disabled={!user}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+              !user
+                ? "text-gray-300 cursor-not-allowed"
+                : "text-gray-500 hover:text-pink-600 hover:bg-pink-50"
+            }`}
+            title={!user ? "Sign up to reply to posts" : ""}
           >
             <MessageCircle className="h-5 w-5" />
             <span className="font-medium">{post.reply_count || 0}</span>

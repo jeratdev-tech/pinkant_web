@@ -1,10 +1,18 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { supabase, TABLES } from "../../lib/supabase";
 import Post from "./Post";
 import CreatePostForm from "./CreatePostForm";
 import ReplyForm from "./ReplyForm";
-import { Plus, Filter, Search, TrendingUp, Clock } from "lucide-react";
+import {
+  Plus,
+  Filter,
+  Search,
+  TrendingUp,
+  Clock,
+  MessageCircle,
+} from "lucide-react";
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest", icon: Clock },
@@ -24,10 +32,32 @@ export default function ForumFeed() {
 
   useEffect(() => {
     fetchPosts();
+    const channel = supabase
+      .channel("posts-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: TABLES.POSTS },
+        fetchPosts
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: TABLES.POSTS },
+        fetchPosts
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: TABLES.POSTS },
+        fetchPosts
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [selectedTags, sortBy, searchQuery]);
 
   const fetchPosts = async () => {
     setLoading(true);
+    setError("");
     try {
       let query = supabase
         .from(TABLES.POSTS)
@@ -35,7 +65,7 @@ export default function ForumFeed() {
           `
           *,
           user:users(display_name, avatar_url),
-          replies:replies(id, body, created_at, user:users(display_name)),
+          replies:replies(id, body, created_at, user_id),
           likes:likes(id)
         `
         )
@@ -55,7 +85,20 @@ export default function ForumFeed() {
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error("Database error:", error);
+        if (
+          error.message.includes("Invalid API key") ||
+          error.message.includes("JWT")
+        ) {
+          setError(
+            "Database connection error. Please check your Supabase configuration."
+          );
+        } else {
+          setError(`Failed to fetch posts: ${error.message}`);
+        }
+        return;
+      }
 
       // Process posts to add computed fields
       const processedPosts = data.map((post) => ({
@@ -74,8 +117,8 @@ export default function ForumFeed() {
 
       setPosts(processedPosts);
     } catch (error) {
-      setError("Failed to fetch posts");
       console.error("Error fetching posts:", error);
+      setError("Failed to fetch posts. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -135,7 +178,7 @@ export default function ForumFeed() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Community Forum</h1>
-        {user && (
+        {user ? (
           <button
             onClick={() => setShowCreateForm(!showCreateForm)}
             className="btn-primary flex items-center gap-2"
@@ -143,6 +186,14 @@ export default function ForumFeed() {
             <Plus className="h-5 w-5" />
             New Post
           </button>
+        ) : (
+          <div className="text-center">
+            <p className="text-gray-600 mb-2">Want to join the conversation?</p>
+            <Link to="/auth" className="btn-primary flex items-center gap-2">
+              <Plus className="h-5 w-5" />
+              Sign Up to Post
+            </Link>
+          </div>
         )}
       </div>
 
@@ -226,6 +277,27 @@ export default function ForumFeed() {
           </div>
         </div>
       </div>
+
+      {/* Authentication Notice for Unauthenticated Users */}
+      {!user && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+              <span className="text-white text-xs">ℹ</span>
+            </div>
+            <div>
+              <p className="font-medium">Welcome to our community!</p>
+              <p className="text-sm">
+                You can browse and read posts, but you'll need to{" "}
+                <Link to="/auth" className="underline hover:no-underline">
+                  create an account
+                </Link>{" "}
+                to like, reply, or create new posts.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Posts */}
       {error && (

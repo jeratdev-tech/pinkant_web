@@ -1,20 +1,20 @@
-import { useState } from 'react'
-import { useAuth } from '../../contexts/AuthContext'
-import { supabase, TABLES } from '../../lib/supabase'
-import { Send, X } from 'lucide-react'
+import { useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import { supabase, TABLES } from "../../lib/supabase";
+import { Send, X } from "lucide-react";
 
 export default function ReplyForm({ post, onReplySubmitted, onCancel }) {
-  const { user } = useAuth()
-  const [body, setBody] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const { user } = useAuth();
+  const [body, setBody] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!body.trim()) return
+    e.preventDefault();
+    if (!body.trim()) return;
 
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError("");
 
     try {
       const { data, error } = await supabase
@@ -23,23 +23,23 @@ export default function ReplyForm({ post, onReplySubmitted, onCancel }) {
           {
             post_id: post.id,
             user_id: user.id,
-            body: body.trim()
-          }
+            body: body.trim(),
+          },
         ])
         .select()
-        .single()
+        .single();
 
-      if (error) throw error
+      if (error) throw error;
 
       // Reset form
-      setBody('')
-      onReplySubmitted(data)
+      setBody("");
+      onReplySubmitted(data);
     } catch (error) {
-      setError(error.message || 'Failed to submit reply')
+      setError(error.message || "Failed to submit reply");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="card mb-4">
@@ -81,7 +81,7 @@ export default function ReplyForm({ post, onReplySubmitted, onCancel }) {
             className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
-              'Submitting...'
+              "Submitting..."
             ) : (
               <>
                 <Send className="h-4 w-4 mr-2" />
@@ -89,15 +89,11 @@ export default function ReplyForm({ post, onReplySubmitted, onCancel }) {
               </>
             )}
           </button>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="btn-secondary"
-          >
+          <button type="button" onClick={onCancel} className="btn-secondary">
             Cancel
           </button>
         </div>
       </form>
     </div>
-  )
+  );
 }

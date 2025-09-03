@@ -26,6 +26,7 @@ export default function CreatePostForm({ onPostCreated, onCancel }) {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [tags, setTags] = useState([]);
+  const [visibility, setVisibility] = useState("community");
   const [newTag, setNewTag] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -61,6 +62,7 @@ export default function CreatePostForm({ onPostCreated, onCancel }) {
             title: title.trim(),
             body: body.trim(),
             tags: tags,
+            visibility,
           },
         ])
         .select()
@@ -73,6 +75,7 @@ export default function CreatePostForm({ onPostCreated, onCancel }) {
       setBody("");
       setTags([]);
       setNewTag("");
+      setVisibility("community");
 
       onPostCreated(data);
     } catch (error) {
@@ -130,6 +133,22 @@ export default function CreatePostForm({ onPostCreated, onCancel }) {
             maxLength={2000}
             required
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Visibility
+          </label>
+          <select
+            value={visibility}
+            onChange={(e) => setVisibility(e.target.value)}
+            className="input-field"
+          >
+            <option value="public">Public</option>
+            <option value="community">Community</option>
+            <option value="followers">Followers</option>
+            <option value="only_me">Only me</option>
+          </select>
         </div>
 
         <div>

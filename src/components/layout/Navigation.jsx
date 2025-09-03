@@ -1,25 +1,43 @@
-import { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { useAuth } from '../../contexts/AuthContext'
-import { Menu, X, Home, MessageCircle, User, LogOut, Settings } from 'lucide-react'
+import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import {
+  Menu,
+  X,
+  Home,
+  MessageCircle,
+  User,
+  LogOut,
+  Settings,
+} from "lucide-react";
 
 export default function Navigation() {
-  const { user, profile, signOut } = useAuth()
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
-  const location = useLocation()
+  const { user, profile, signOut } = useAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const location = useLocation();
 
   const navigation = [
-    { name: 'Home', href: '/', icon: Home },
-    { name: 'Forum', href: '/forum', icon: MessageCircle },
-  ]
+    { name: "Home", href: "/", icon: Home },
+    { name: "Forum", href: "/forum", icon: MessageCircle },
+    { name: "DMs", href: "/dm", icon: MessageCircle },
+    { name: "Wallet", href: "/wallet", icon: MessageCircle },
+  ];
 
-  const isActive = (path) => location.pathname === path
+  const isActive = (path) => location.pathname === path;
 
   const handleSignOut = async () => {
-    await signOut()
-    setIsUserMenuOpen(false)
-  }
+    try {
+      console.log("Logout button clicked");
+      await signOut();
+      setIsUserMenuOpen(false);
+      console.log("Logout completed");
+    } catch (error) {
+      console.error("Error during logout:", error);
+      // Still close the menu even if there's an error
+      setIsUserMenuOpen(false);
+    }
+  };
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200">
@@ -39,21 +57,21 @@ export default function Navigation() {
             {/* Desktop Navigation */}
             <div className="hidden md:ml-8 md:flex md:space-x-4">
               {navigation.map((item) => {
-                const Icon = item.icon
+                const Icon = item.icon;
                 return (
                   <Link
                     key={item.name}
                     to={item.href}
                     className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                       isActive(item.href)
-                        ? 'bg-pink-50 text-pink-700'
-                        : 'text-gray-600 hover:text-pink-600 hover:bg-pink-50'
+                        ? "bg-pink-50 text-pink-700"
+                        : "text-gray-600 hover:text-pink-600 hover:bg-pink-50"
                     }`}
                   >
                     <Icon className="h-4 w-4" />
                     {item.name}
                   </Link>
-                )
+                );
               })}
             </div>
           </div>
@@ -67,10 +85,10 @@ export default function Navigation() {
                   className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-100 transition-colors"
                 >
                   <div className="w-8 h-8 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                    {profile?.display_name?.charAt(0) || 'U'}
+                    {profile?.display_name?.charAt(0) || "U"}
                   </div>
                   <span className="hidden sm:block text-sm font-medium text-gray-700">
-                    {profile?.display_name || 'User'}
+                    {profile?.display_name || "User"}
                   </span>
                 </button>
 
@@ -105,10 +123,7 @@ export default function Navigation() {
                 )}
               </div>
             ) : (
-              <Link
-                to="/auth"
-                className="btn-primary"
-              >
+              <Link to="/auth" className="btn-primary">
                 Sign In
               </Link>
             )}
@@ -133,7 +148,7 @@ export default function Navigation() {
         <div className="md:hidden border-t border-gray-200">
           <div className="px-2 pt-2 pb-3 space-y-1">
             {navigation.map((item) => {
-              const Icon = item.icon
+              const Icon = item.icon;
               return (
                 <Link
                   key={item.name}
@@ -141,14 +156,14 @@ export default function Navigation() {
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg text-base font-medium transition-colors ${
                     isActive(item.href)
-                      ? 'bg-pink-50 text-pink-700'
-                      : 'text-gray-600 hover:text-pink-600 hover:bg-pink-50'
+                      ? "bg-pink-50 text-pink-700"
+                      : "text-gray-600 hover:text-pink-600 hover:bg-pink-50"
                   }`}
                 >
                   <Icon className="h-5 w-5" />
                   {item.name}
                 </Link>
-              )
+              );
             })}
             {user && (
               <>
@@ -174,5 +189,5 @@ export default function Navigation() {
         </div>
       )}
     </nav>
-  )
+  );
 }
